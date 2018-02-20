@@ -1,27 +1,44 @@
-#include <iostream>
-#include <type_traits>
+#include <stdexcept>
 #include <Eigen/Dense>
 
 template <typename _Scalar>
 class SymMat
 {
 public:
+  /**
+   * Copy constructor.
+   */
   SymMat(const SymMat &other) : m_order(other.m_order)
   {
     initArray();
-    copyArray(other);
+
+    for (int i = arraySize() - 1; i >= 0; --i)
+    {
+      m_data[i] = other.m_data[i];
+    }
   }
 
+  /**
+   * Move constructor.
+   */
   SymMat(SymMat &&other) : m_order(other.m_order), m_data(other.m_data)
   {
     other.m_data = nullptr;
   }
 
+  /**
+   * Constructor to initialize an order X order symmetric matrix.
+   */
   SymMat(int order) : m_order(order)
   {
     initArray();
   }
 
+  /**
+   * Constructor to copy the upper triangular part of a Eigen::Matrix into a symmetric matrix.
+   * 
+   * Throws an exception if other is not a square matrix.
+   */
   template <int Rows, int Cols, int Options, int MaxRows, int MaxCols>
   SymMat(const Eigen::Matrix<_Scalar, Rows, Cols, Options, MaxRows, MaxCols> &other) : m_order(other.rows())
   {
@@ -41,7 +58,8 @@ public:
     {
       m_order = 0;
       m_data = nullptr;
-      // throw exception
+
+      throw std::invalid_argument("Expected a square matrix");
     }
   }
 
@@ -53,6 +71,11 @@ public:
     }
   }
 
+  /**
+   * Operator to add two symmetric matrices.
+   * 
+   * Throws an exception if their data is invalid or if they don't have the same order.
+   */
   inline SymMat operator+(const SymMat &other) const
   {
     if (m_order == other.m_order && m_data && other.m_data)
@@ -68,12 +91,18 @@ public:
     }
     else
     {
-      // throw exception
+      throw std::invalid_argument("Expected two valid matrices to add or two matrices with same order");
     }
   }
 
+  /**
+   * Operator to add a symmetric matrix and a Eigen::Matrix.
+   * 
+   * Throws an exception if their data is invalid or if they don't have the same order.
+   */
   template <int Rows, int Cols, int Options, int MaxRows, int MaxCols>
-  inline Eigen::Matrix<_Scalar, Rows, Cols, Options, MaxRows, MaxCols> operator+(const Eigen::Matrix<_Scalar, Rows, Cols, Options, MaxRows, MaxCols> &other) const
+  inline Eigen::Matrix<_Scalar, Rows, Cols, Options, MaxRows, MaxCols>
+  operator+(const Eigen::Matrix<_Scalar, Rows, Cols, Options, MaxRows, MaxCols> &other) const
   {
     if (other.rows() == m_order && other.cols() == m_order && m_data)
     {
@@ -91,10 +120,15 @@ public:
     }
     else
     {
-      // throw exception
+      throw std::invalid_argument("Expected two valid matrices to add or two matrices with same order");
     }
   }
 
+  /**
+   * Operator to subtract two symmetric matrices.
+   * 
+   * Throws an exception if their data is invalid or if they don't have the same order.
+   */
   inline SymMat operator-(const SymMat &other) const
   {
     if (m_order == other.m_order && m_data && other.m_data)
@@ -110,12 +144,18 @@ public:
     }
     else
     {
-      // throw exception
+      throw std::invalid_argument("Expected two valid matrices to subtract or two matrices with same order");
     }
   }
 
+  /**
+   * Operator to subtract a symmetric matrix and a Eigen::Matrix.
+   * 
+   * Throws an exception if their data is invalid or if they don't have the same order.
+   */
   template <int Rows, int Cols, int Options, int MaxRows, int MaxCols>
-  inline Eigen::Matrix<_Scalar, Rows, Cols, Options, MaxRows, MaxCols> operator-(const Eigen::Matrix<_Scalar, Rows, Cols, Options, MaxRows, MaxCols> &other) const
+  inline Eigen::Matrix<_Scalar, Rows, Cols, Options, MaxRows, MaxCols>
+  operator-(const Eigen::Matrix<_Scalar, Rows, Cols, Options, MaxRows, MaxCols> &other) const
   {
     if (other.rows() == m_order && other.cols() == m_order && m_data)
     {
@@ -133,10 +173,15 @@ public:
     }
     else
     {
-      // throw exception
+      throw std::invalid_argument("Expected two valid matrices to subtract or two matrices with same order");
     }
   }
 
+  /**
+   * Operator to multiply two symmetric matrices.
+   * 
+   * Throws an exception if their data is invalid or if they don't have the same order.
+   */
   inline Eigen::Matrix<_Scalar, Eigen::Dynamic, Eigen::Dynamic> operator*(const SymMat &other) const
   {
     if (m_order == other.m_order && m_data && other.m_data)
@@ -164,11 +209,18 @@ public:
     }
     else
     {
-      // throw exception
+      throw std::invalid_argument("Expected two valid matrices to multiply or two compatible ones");
     }
   }
 
-  inline Eigen::Matrix<_Scalar, Eigen::Dynamic, Eigen::Dynamic> operator*(const Eigen::Matrix<_Scalar, Eigen::Dynamic, Eigen::Dynamic> &other) const
+  /**
+   * Operator to multiply a symmetric matrix and a Eigen::Matrix.
+   * 
+   * Throws an exception if their data is invalid or if they don't have compatible orders based on 
+   * matrix multiplication rules.
+   */
+  inline Eigen::Matrix<_Scalar, Eigen::Dynamic, Eigen::Dynamic>
+  operator*(const Eigen::Matrix<_Scalar, Eigen::Dynamic, Eigen::Dynamic> &other) const
   {
     if (m_order == other.rows() && m_data)
     {
@@ -193,10 +245,15 @@ public:
     }
     else
     {
-      // throw exception
+      throw std::invalid_argument("Expected two valid matrices to multiply or two compatible ones");
     }
   }
 
+  /**
+   * Operator to access a value of a symmetric matrix. The resulting value can be modified.
+   * 
+   * Throws an exception if the given indices are invalid.
+   */
   inline _Scalar &operator()(Eigen::Index row, Eigen::Index col)
   {
     if (row >= 0 && row < m_order && col >= 0 && col < m_order && m_data)
@@ -210,10 +267,15 @@ public:
     }
     else
     {
-      // throw exception
+      throw std::range_error("Matrix indices out of range");
     }
   }
 
+  /**
+   * Operator to access a value of a symmetric matrix. The resulting value cannot be modified.
+   * 
+   * Throws an exception if the given indices are invalid.
+   */
   inline _Scalar &operator()(Eigen::Index row, Eigen::Index col) const
   {
     if (row >= 0 && row < m_order && col >= 0 && col < m_order && m_data)
@@ -227,35 +289,42 @@ public:
     }
     else
     {
-      // throw exception
+      throw std::range_error("Matrix indices out of range");
     }
   }
 
+  /**
+   * Returns the order of the symmetric matrix.
+   */
   int order() const
   {
     return m_order;
   }
 
 private:
+  /**
+   * Reserves memory for the values of the symmetric matrix.
+   * 
+   * m_order needs to be initialized before usage.
+   */
   void initArray()
   {
-    m_data = new _Scalar[arraySize()];
-  }
-
-  void copyArray(const SymMat &other)
-  {
-    for (int i = arraySize() - 1; i >= 0; --i)
+    if (m_order > 0)
     {
-      m_data[i] = other.m_data[i];
+      m_data = new _Scalar[arraySize()];
     }
   }
 
+  /**
+   * Returns the number of values actually being stored by the symmetric matrix.
+   */
   int arraySize() const
   {
     return m_order * (m_order + 1) / 2;
   }
 
 private:
+  // The values of the symmetric matrix are stored sequentially.
   _Scalar *m_data;
   int m_order;
 };
