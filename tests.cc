@@ -118,7 +118,7 @@ int main()
   try
   {
     MatrixXd m4(5, ORDER);
-    sym1 *m4;
+    sym1 * m4;
     std::clog << "Test failed: SymMat * Eigen::Matrix didn't throw an exception with different order matrices." << std::endl;
   }
   catch (std::exception &e)
