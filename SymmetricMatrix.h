@@ -97,7 +97,7 @@ public:
   }
 
   template <int Rows, int Cols, int Options, int MaxRows, int MaxCols>
-  inline auto operator+(const Eigen::Matrix<_Scalar, Rows, Cols, Options, MaxRows, MaxCols> &other) const
+  inline Eigen::Matrix<_Scalar, Rows, Cols, Options, MaxRows, MaxCols> operator+(const Eigen::Matrix<_Scalar, Rows, Cols, Options, MaxRows, MaxCols> &other) const
   {
     if (other.rows() == m_order && other.cols() == m_order && m_data)
     {
@@ -139,7 +139,7 @@ public:
   }
 
   template <int Rows, int Cols, int Options, int MaxRows, int MaxCols>
-  inline auto operator-(const Eigen::Matrix<_Scalar, Rows, Cols, Options, MaxRows, MaxCols> &other) const
+  inline Eigen::Matrix<_Scalar, Rows, Cols, Options, MaxRows, MaxCols> operator-(const Eigen::Matrix<_Scalar, Rows, Cols, Options, MaxRows, MaxCols> &other) const
   {
     if (other.rows() == m_order && other.cols() == m_order && m_data)
     {
@@ -161,7 +161,7 @@ public:
     }
   }
 
-  inline SymMat operator*(const SymMat &other) const
+  inline Eigen::Matrix<_Scalar, Eigen::Dynamic, Eigen::Dynamic> operator*(const SymMat &other) const
   {
     if (m_order == other.m_order && m_data && other.m_data)
     {
@@ -170,6 +170,37 @@ public:
       for (int i = 0; i < m_order; ++i)
       {
         for (int j = 0; j < m_order; ++j)
+        {
+          _Scalar sum = 0;
+
+          for (int k = 0; k < m_order; ++k)
+          {
+            auto a = (*this)(i, k);
+            auto b = other(k, j);
+            sum += a * b;
+          }
+
+          product(i, j) = sum;
+        }
+      }
+
+      return product;
+    }
+    else
+    {
+      // throw exception
+    }
+  }
+
+  inline Eigen::Matrix<_Scalar, Eigen::Dynamic, Eigen::Dynamic> operator*(const Eigen::Matrix<_Scalar, Eigen::Dynamic, Eigen::Dynamic> &other) const
+  {
+    if (m_order == other.rows() && m_data)
+    {
+      Eigen::Matrix<_Scalar, Eigen::Dynamic, Eigen::Dynamic> product(m_order, other.cols());
+
+      for (int i = 0; i < m_order; ++i)
+      {
+        for (int j = 0; j < other.cols(); ++j)
         {
           _Scalar sum = 0;
 
@@ -196,10 +227,10 @@ public:
     {
       if (row > col)
       {
-        return m_data[(col + 1) * col / 2 + row];
+        return m_data[col * (m_order - 1) + row];
       }
 
-      return m_data[(row + 1) * row / 2 + col];
+      return m_data[row * (m_order - 1) + col];
     }
     else
     {
@@ -213,10 +244,10 @@ public:
     {
       if (row > col)
       {
-        return m_data[(col + 1) * col / 2 + row];
+        return m_data[col * (m_order - 1) + row];
       }
 
-      return m_data[(row + 1) * row / 2 + col];
+      return m_data[row * (m_order - 1) + col];
     }
     else
     {
