@@ -7,10 +7,11 @@ using Eigen::MatrixXd;
 
 int main()
 {
-  std::clog << "Starting tests..." << std::endl << std::endl;
+  std::clog << "Starting tests..." << std::endl
+            << std::endl;
 
   const int ORDER = 10;
-  
+
   MatrixXd m1 = MatrixXd::Random(ORDER, ORDER);
 
   SymMat<double> sym1(m1);
@@ -57,12 +58,12 @@ int main()
   if ((sym1 - sym1) * ident != mzero ||
       (symIdent - ident) != mzero)
   {
-    std::clog << "Test failed: Subtraction or multiplication failed." << std::endl;    
+    std::clog << "Test failed: Subtraction or multiplication failed." << std::endl;
   }
 
   if (sym1 * mzero != mzero)
   {
-    std:: clog << "Test failed: SymMat * 0 != 0." << std::endl;
+    std::clog << "Test failed: SymMat * 0 != 0." << std::endl;
   }
 
   MatrixXd m2 = MatrixXd::Random(ORDER, 5);
@@ -72,7 +73,10 @@ int main()
     SymMat<double> sym2(m2);
     std::clog << "Test failed: SymMat constructor didn't throw an exception with non square matrix." << std::endl;
   }
-  catch (std::exception &e) {}
+  catch (std::exception &e)
+  {
+  }
 
-  std::cout << std::endl << "Tests finished." << std::endl;
+  std::cout << std::endl
+            << "Tests finished." << std::endl;
 }
