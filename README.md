@@ -15,4 +15,4 @@ included and that's it.
 #include "SymmetricMatrix.h"
 ```
 
-An example of usage can be seen on `tests.cc`
+An example of usage can be seen on file `tests.cc`

@@ -289,7 +289,7 @@ public:
    * 
    * Throws an exception if the given indices are invalid.
    */
-  inline Scalar &operator()(Eigen::Index row, Eigen::Index col) const
+  inline const Scalar &operator()(Eigen::Index row, Eigen::Index col) const
   {
     if (row >= 0 && row < m_order && col >= 0 && col < m_order && m_data)
     {
